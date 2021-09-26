@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Moderation</title>
+  </head>
+  <body>
+    <label for="file">Upload image</label>
+    <input id="image" name="image" type="file" accept="image/*" />
+    <button id="upload">Upload</button>
+    <script>
+      const uploadButton = document.getElementById('upload')
+      const fileInput = document.getElementById('image')
+
+      if (uploadButton) {
+        uploadButton.addEventListener('click', () => {
+          const fileReader = new FileReader()
+          const file = fileInput.files[0]
+
+          fileReader.onload = async (evt) => {
+            const byteLength = evt.target.result.byteLength
+            const CHUNK_SIZE = 1000
+            const chunkCount = byteLength / CHUNK_SIZE
+            const fileName =
+              +new Date() + Math.random() * CHUNK_SIZE + file.name
+            for (let chunkId = 0; chunkId < chunkCount + 1; chunkId++) {
+              const chunk = evt.target.result.slice(
+                chunkId * CHUNK_SIZE,
+                chunkId * CHUNK_SIZE + CHUNK_SIZE
+              )
+
+              await fetch('http://localhost:3000/upload', {
+                method: 'POST',
+                body: chunk,
+                headers: {
+                  'content-type': 'application/octet-stream',
+                  'content-length': chunk.length,
+                  'file-name': fileName,
+                },
+              })
+            }
+          }
+          fileReader.readAsArrayBuffer(file)
+        })
+      }
+    </script>
+  </body>
+</html>
